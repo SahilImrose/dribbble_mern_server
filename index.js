@@ -26,8 +26,7 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-const uri =
-  `mongodb+srv://sahilimrosezahin:${process.env.MONGO_PASS}@cluster0.pvlfj2a.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const uri = `mongodb+srv://sahilimrosezahin:${process.env.MONGO_PASS}@cluster0.pvlfj2a.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -104,6 +103,14 @@ async function run() {
           64
         )}`}>here.</a></p>`, // html body
       });
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const data = {
+        $set: {
+          token: stringGen(64),
+        },
+      };
+      await userCollection.updateOne(filter, data, options);
     });
   } finally {
     // await client.close();
