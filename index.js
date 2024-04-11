@@ -43,7 +43,12 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await userCollection.findOne(query);
-      res.send(result);
+      if (result != null) {
+        res.send(result);
+        
+      }else{
+        res.send({error:"User not found"})
+      }
     });
     app.post("/api/createUser", async (req, res) => {
       const usrNameUnique = await userCollection
@@ -81,6 +86,19 @@ async function run() {
       await userCollection.updateOne(filter, data, options);
       res.send({ status: "updated" });
     });
+    app.put("/api/verifyProfile/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updatedData = req.body;
+      const data = {
+        $set: {
+          isVerified: updatedData.isVerified
+        },
+      };
+      await userCollection.updateOne(filter, data, options);
+      res.send({ status: "updated" });
+    });
     app.post("/api/verifyEmail", async (req, res) => {
       const id = req.body.id;
       const email = req.body.email;
@@ -94,23 +112,22 @@ async function run() {
 
         return text;
       }
-
+        const token  = stringGen(64)
       const info = await transporter.sendMail({
         from: "Verify Email <contact@sahilimrose.com>", // sender address
         to: email, // list of receivers
         subject: "Verify Email", // Subject line
-        html: `<p>In order to verify your Dribbble account click <a href=${`http://localhost:5173/verify/${id}/token/${stringGen(
-          64
-        )}`}>here.</a></p>`, // html body
+        html: `<p>In order to verify your Dribbble account click <a href=${`https://dribbble-mern.netlify.app/verify/${id}/token/${token}`}>here.</a></p>`, // html body
       });
       const filter = { _id: new ObjectId(id) };
       const options = { upsert: true };
       const data = {
         $set: {
-          token: stringGen(64),
+          token: token,
         },
       };
       await userCollection.updateOne(filter, data, options);
+      console.log(token)
     });
   } finally {
     // await client.close();
